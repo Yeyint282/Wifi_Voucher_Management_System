@@ -22,7 +22,7 @@ class WifiCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(8.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -44,7 +44,7 @@ class WifiCard extends StatelessWidget {
               ),
             ),
             Text(
-              'For ${code.duration}',
+              code.duration,
               style: const TextStyle(fontSize: 14),
             ),
           ],

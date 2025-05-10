@@ -24,8 +24,8 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   // Fixed credentials
-  static const String validUsername = 'Ko Htet';
-  static const String validPassword = 'kohtet1234';
+  static const String validUsername = 'Admin';
+  static const String validPassword = 'admin@228';
 
   // SharedPreferences keys
   static const String loggedInKey = 'isLoggedIn';

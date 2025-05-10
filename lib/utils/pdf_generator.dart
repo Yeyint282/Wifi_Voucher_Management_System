@@ -16,16 +16,26 @@ class PdfGenerator {
     // Define page format and margin
     final pageFormat = PdfPageFormat.a4;
 
-    // Group codes in sets of 50 (10x5) per page
+    // Always put exactly 50 cards per page
     const int codesPerPage = 50;
 
-    for (var i = 0; i < codes.length; i += codesPerPage) {
-      final pageItems = codes.skip(i).take(codesPerPage).toList();
+    // Calculate number of pages needed
+    final int numberOfPages = (codes.length / codesPerPage).ceil();
+
+    for (int page = 0; page < numberOfPages; page++) {
+      // Calculate start and end indices for this page
+      final startIndex = page * codesPerPage;
+      final endIndex = (startIndex + codesPerPage) < codes.length
+          ? startIndex + codesPerPage
+          : codes.length;
+
+      // Extract codes for this page
+      final pageItems = codes.sublist(startIndex, endIndex);
 
       pdf.addPage(
         pw.Page(
           pageFormat: pageFormat,
-          margin: const pw.EdgeInsets.all(10.0),
+          margin: const pw.EdgeInsets.all(6.0),
           build: (pw.Context context) {
             return pw.Container(
               padding: const pw.EdgeInsets.all(5.0),
@@ -40,12 +50,27 @@ class PdfGenerator {
   }
 
   static pw.Widget _buildVoucherGrid(List<WifiCode> codes) {
+    // If fewer than 50 codes, pad with empty cards
+    final paddedCodes = List<WifiCode?>.from(codes);
+
+    // Add null elements to make length 50 if needed
+    while (paddedCodes.length < 50) {
+      paddedCodes.add(null);
+    }
+
     return pw.GridView(
-      crossAxisCount: 10,  // 10 columns
-      childAspectRatio: 2.0,  // Double width, half height
+      crossAxisCount: 5,  // 5 columns
+      childAspectRatio: 1.5,  // Width to height ratio of 1.5
       crossAxisSpacing: 2.0,
       mainAxisSpacing: 2.0,
-      children: codes.map((code) => _buildVoucherCard(code)).toList(),
+      children: paddedCodes.map((code) {
+        // Return empty space for null codes (padding)
+        if (code == null) {
+          return pw.Container();
+        }
+        // Otherwise build normal voucher card
+        return _buildVoucherCard(code);
+      }).toList(),
     );
   }
 
@@ -73,8 +98,8 @@ class PdfGenerator {
             textAlign: pw.TextAlign.center,
             style: pw.TextStyle(
               color: color,
-              fontWeight: pw.FontWeight.bold,
-              fontSize: 6,
+              fontSize: 12,
+              decoration: pw.TextDecoration.underline,
             ),
           ),
           pw.SizedBox(height: 1),
@@ -82,14 +107,14 @@ class PdfGenerator {
             code.code,
             textAlign: pw.TextAlign.center,
             style: pw.TextStyle(
-              fontSize: 7,
+              fontSize: 10,
               fontWeight: pw.FontWeight.bold,
             ),
           ),
           pw.Text(
-            'For ${code.duration}',
+            ' ${code.duration}',
             textAlign: pw.TextAlign.center,
-            style: const pw.TextStyle(fontSize: 5),
+            style: const pw.TextStyle(fontSize: 10.0),
           ),
         ],
       ),
@@ -109,32 +134,6 @@ class PdfGenerator {
       bytes: pdfData,
       filename: 'wifi_voucher_codes.pdf',
     );
-  }
-
-  // Optional: Create a version with QR codes included
-  static Future<Uint8List> generateWifiCodesPdfWithQR(List<WifiCode> codes) async {
-    final pdf = pw.Document();
-    final pageFormat = PdfPageFormat.a4;
-    const int codesPerPage = 50;
-
-    for (var i = 0; i < codes.length; i += codesPerPage) {
-      final pageItems = codes.skip(i).take(codesPerPage).toList();
-
-      pdf.addPage(
-        pw.Page(
-          pageFormat: pageFormat,
-          margin: const pw.EdgeInsets.all(10.0),
-          build: (pw.Context context) {
-            return pw.Container(
-              padding: const pw.EdgeInsets.all(5.0),
-              child: _buildVoucherGrid(pageItems),
-            );
-          },
-        ),
-      );
-    }
-
-    return pdf.save();
   }
 
   static Future<Uint8List?> generateQrCode(
